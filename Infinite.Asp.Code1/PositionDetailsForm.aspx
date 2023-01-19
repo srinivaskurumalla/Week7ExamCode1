@@ -71,7 +71,7 @@
                    
                           <div>
                               <asp:Button ID="BtnAdd" runat="server" Text="Submit" OnClick="BtnAdd_Click"/> 
-                           <asp:Button ID="BtnReset" runat="server" Text="Reset" OnClick="BtnReset_Click"/> 
+                           <asp:Button ID="BtnReset" runat="server" Text="Reset" OnClick="BtnReset_Click" CausesValidation="false"/> 
 
                 </div>
                 

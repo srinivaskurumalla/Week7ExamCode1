@@ -16,7 +16,7 @@ namespace Infinite.Asp.Code1
     {
         private SqlConnection con = null;
         private SqlCommand cmd = null;
-
+        int returnValue = 0;
         protected void Page_Load(object sender, EventArgs e)
         {
 
@@ -25,32 +25,50 @@ namespace Infinite.Asp.Code1
         protected void BtnAdd_Click(object sender, EventArgs e)
         {
 
-            con = new SqlConnection(ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString);
-            cmd = new SqlCommand("usp_InsertIntoPosition", con);
-
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            cmd.Parameters.AddWithValue("@PostionCode", TxtPositionCode.Text);
-            cmd.Parameters.AddWithValue("@Description", TxtDescription.Text);
-            cmd.Parameters.AddWithValue("@BudgetStrength", TxtBStrength.Text);
-            cmd.Parameters.AddWithValue("@CurrentStrngth", TxtCStrength.Text);
-            cmd.Parameters.AddWithValue("@Year", DdlYear.SelectedItem.Value);
-
-            if (con.State == ConnectionState.Closed)
+            using (con = new SqlConnection(ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString))
             {
-                con.Open();
-            }
-            int res = cmd.ExecuteNonQuery();
+                using (cmd = new SqlCommand("usp_InsertIntoPosition", con))
+                { 
+                    cmd.CommandType = CommandType.StoredProcedure;
 
-            if (res > 0)
+                cmd.Parameters.AddWithValue("@PostionCode", TxtPositionCode.Text);
+                cmd.Parameters.AddWithValue("@Description", TxtDescription.Text);
+                cmd.Parameters.AddWithValue("@BudgetStrength", TxtBStrength.Text);
+                cmd.Parameters.AddWithValue("@CurrentStrngth", TxtCStrength.Text);
+                cmd.Parameters.AddWithValue("@Year", DdlYear.SelectedItem.Value);
+
+
+                    //To get stored procedure return value
+                    SqlParameter retVal = cmd.Parameters.Add("@Return_Value", SqlDbType.Int);
+                    retVal.Direction = ParameterDirection.ReturnValue;
+
+                    if (con.State == ConnectionState.Closed)
+                {
+                    con.Open();
+                }
+                cmd.ExecuteNonQuery();
+
+                    returnValue = (int)retVal.Value;
+                  
+               
+            }
+            }
+            if(returnValue == 1)
             {
                 ScriptManager.RegisterStartupScript(this, GetType(), "showalert", "alert('Success! Position Added successfully.');", true);
+
+            }
+            else if(returnValue == -1)
+            {
+                ScriptManager.RegisterStartupScript(this, GetType(), "showalert", "alert('Failed! PositionId is already available.');", true);
+
             }
         }
 
 
         protected void BtnReset_Click(object sender, EventArgs e)
         {
+           
             Reset();
         }
         private void Reset()
@@ -60,8 +78,9 @@ namespace Infinite.Asp.Code1
             TxtBStrength.Text = "";
            
             TxtCStrength.Text = "";
-            DdlYear.SelectedItem.Value = "--Select--";
-           
+            DdlYear.ClearSelection();
+
+
         }
     }
 }
